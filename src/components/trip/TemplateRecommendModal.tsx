@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * AI 行程规划弹窗
+ * 模板推荐规划弹窗
  *
- * 灵感来源：Wanderboat AI 的对话式行程生成
+ * 灵感来源：Wanderboat 的对话式行程生成
  * - 自然语言输入
  * - 实时解析展示（目的地/天数/偏好）
  * - 匹配模板或生成框架
@@ -37,12 +37,12 @@ const EXAMPLE_PROMPTS = [
   "三亚5天海滩度假",
 ];
 
-interface AIPlannerModalProps {
+interface TemplateRecommendModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-export function AIPlannerModal({ open, onClose }: AIPlannerModalProps) {
+export function TemplateRecommendModal({ open, onClose }: TemplateRecommendModalProps) {
   const [input, setInput] = useState("");
   const [hasGenerated, setHasGenerated] = useState(false);
   const router = useRouter();
@@ -130,7 +130,7 @@ export function AIPlannerModal({ open, onClose }: AIPlannerModalProps) {
     <Modal
       open={open}
       onClose={handleClose}
-      title="AI 智能规划"
+      title="模板推荐"
       size="lg"
       footer={
         !generated ? (

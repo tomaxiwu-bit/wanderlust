@@ -54,8 +54,8 @@ export default function AtlasMap({ markers }: AtlasMapProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const tileUrl = "/api/tile/{z}/{x}/{y}?source=amap";
-  const tileAttribution = '&copy; <a href="https://www.amap.com/">高德地图</a>';
+  const tileUrl = "/api/tile/{z}/{x}/{y}?source=osm";
+  const tileAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> 贡献者';
   const tileClassName = isDark ? "leaflet-tile-dark-filter" : "";
 
   if (markers.length === 0) return null;

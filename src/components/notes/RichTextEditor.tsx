@@ -20,6 +20,7 @@ import {
   Minus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "@/components/ui/toast";
 
 interface RichTextEditorProps {
   content: string;
@@ -74,6 +75,12 @@ export function RichTextEditor({
     if (url === null) return;
     if (url === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+    // 安全校验：仅允许 http/https 协议，过滤 javascript: 等危险协议
+    const trimmedUrl = url.trim();
+    if (trimmedUrl && !/^https?:\/\//i.test(trimmedUrl)) {
+      toast.error("链接无效", "仅支持 http/https 协议的链接");
       return;
     }
     editor

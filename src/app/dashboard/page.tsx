@@ -28,7 +28,7 @@ import {
 import { formatDate, daysBetween } from "@/lib/utils";
 import { getTripStatusConfig } from "@/lib/constants";
 import { getStorageUsage, getStorageUsageAsync, formatBytes } from "@/lib/storage-monitor";
-import { AIPlannerModal } from "@/components/trip/AIPlannerModal";
+import { TemplateRecommendModal } from "@/components/trip/TemplateRecommendModal";
 import type { TripStatus } from "@/types";
 
 type SortBy = "updated" | "start" | "days";
@@ -37,7 +37,7 @@ export default function DashboardPage() {
   const { trips, addTrip, deleteTrip } = useTripStore();
   const hydrated = useHydrated();
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showAIPlanner, setShowAIPlanner] = useState(false);
+  const [showTemplateRecommend, setShowTemplateRecommend] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<TripStatus | "all">("all");
   const [sortBy, setSortBy] = useState<SortBy>("updated");
@@ -151,10 +151,10 @@ export default function DashboardPage() {
           <Button
             variant="outline"
             leftIcon={<Sparkles className="h-4 w-4 text-primary" />}
-            onClick={() => setShowAIPlanner(true)}
+            onClick={() => setShowTemplateRecommend(true)}
             className="border-primary/30 hover:bg-primary/5"
           >
-            <span className="hidden sm:inline">AI 规划</span>
+            <span className="hidden sm:inline">模板推荐</span>
           </Button>
           <Button
             variant="primary"
@@ -369,10 +369,10 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* AI 智能规划弹窗 */}
-      <AIPlannerModal
-        open={showAIPlanner}
-        onClose={() => setShowAIPlanner(false)}
+      {/* 模板推荐弹窗 */}
+      <TemplateRecommendModal
+        open={showTemplateRecommend}
+        onClose={() => setShowTemplateRecommend(false)}
       />
 
       {/* 新建行程弹窗 */}

@@ -140,6 +140,20 @@ function optionalString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+// 字段长度上限：防止恶意/损坏的备份文件注入超大字符串，耗尽内存或撑爆本地存储。
+const MAX_NOTE_CONTENT_CHARS = 100_000;
+const MAX_URL_CHARS = 2_048;
+const MAX_DESCRIPTION_CHARS = 5_000;
+const MAX_NOTE_TITLE_CHARS = 500;
+
+/** 校验字符串并限制最大长度；超长时截断，非字符串返回 undefined。 */
+function boundedString(value: string, maxLen: number): string;
+function boundedString(value: unknown, maxLen: number): string | undefined;
+function boundedString(value: unknown, maxLen: number): string | undefined {
+  if (typeof value !== "string") return undefined;
+  return value.length > maxLen ? value.slice(0, maxLen) : value;
+}
+
 function nonNegativeNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined;
 }
@@ -203,8 +217,8 @@ export function parseTripBackup(text: string): ParsedTripBackup {
     destination,
     startDate,
     endDate,
-    description: optionalString(raw.trip.description),
-    coverImage: optionalString(raw.trip.coverImage),
+    description: boundedString(raw.trip.description, MAX_DESCRIPTION_CHARS),
+    coverImage: boundedString(raw.trip.coverImage, MAX_URL_CHARS),
     status: stringValue(raw.trip.status, TRIP_STATUSES) ?? "planning",
     visibility: stringValue(raw.trip.visibility, VISIBILITIES) ?? "private",
     baseCurrency: nonEmptyString(raw.trip.baseCurrency) ?? "CNY",
@@ -240,8 +254,8 @@ export function parseTripBackup(text: string): ParsedTripBackup {
         stayMinutes: nonNegativeInteger(value.stayMinutes),
         notes: optionalString(value.notes),
         rating: typeof value.rating === "number" && Number.isInteger(value.rating) && value.rating >= 1 && value.rating <= 5 ? value.rating : undefined,
-        imageUrl: optionalString(value.imageUrl),
-        websiteUrl: optionalString(value.websiteUrl),
+        imageUrl: boundedString(value.imageUrl, MAX_URL_CHARS),
+        websiteUrl: boundedString(value.websiteUrl, MAX_URL_CHARS),
       });
     });
   }
@@ -261,7 +275,7 @@ export function parseTripBackup(text: string): ParsedTripBackup {
         date: value.date,
         placeExportId: nonEmptyString(value._placeExportId),
         convertedAmount: nonNegativeNumber(value.convertedAmount),
-        description: optionalString(value.description),
+        description: boundedString(value.description, MAX_DESCRIPTION_CHARS),
         paidBy: optionalString(value.paidBy),
         splitAmong: stringList(value.splitAmong),
       });
@@ -273,8 +287,13 @@ export function parseTripBackup(text: string): ParsedTripBackup {
     raw.notes.forEach((value) => {
       if (!isRecord(value)) return;
       const title = nonEmptyString(value.title);
-      if (!title || typeof value.content !== "string") return;
-      notes.push({ title, content: value.content, placeExportId: nonEmptyString(value._placeExportId) });
+      const content = boundedString(value.content, MAX_NOTE_CONTENT_CHARS);
+      if (!title || content === undefined) return;
+      notes.push({
+        title: boundedString(title, MAX_NOTE_TITLE_CHARS),
+        content,
+        placeExportId: nonEmptyString(value._placeExportId),
+      });
     });
   }
 

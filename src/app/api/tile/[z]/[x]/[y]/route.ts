@@ -4,23 +4,18 @@ import { NextRequest, NextResponse } from "next/server";
  * 地图瓦片代理
  *
  * 绕过 Chromium ORB（Opaque Response Blocking）和 CORS 限制。
- * 客户端 Leaflet 直接请求高德瓦片会被 ORB 拦截，
+ * 客户端 Leaflet 直接请求瓦片会被 ORB 拦截，
  * 通过服务端代理后，响应变为同源，不再受 ORB 影响。
  *
- * 路由：/api/tile/{z}/{x}/{y}?source=amap|osm
+ * 路由：/api/tile/{z}/{x}/{y}?source=osm|amap
  *
- * 容错策略：
- * - source=amap（默认）：先请求高德，失败/超时自动回退到 OSM
- * - source=osm：直接使用 OSM
- * - 高德瓦片在国内快，OSM 在全球可用，回退保证海外用户也能看到地图
+ * 瓦片源策略：
+ * - 仅使用 OpenStreetMap 瓦片源（source 默认为 osm）
+ * - source=amap 出于历史兼容性保留，收到时同样走 OSM
+ * - 不再请求高德瓦片，也不再伪造浏览器 UA / Referer
  */
 
-// 高德瓦片服务器（轮询子域名）
-const AMAP_SUBDOMAINS = ["01", "02", "03", "04"];
-const AMAP_URL = (sub: string, z: number, x: number, y: number) =>
-  `https://webrd${sub}.is.autonavi.com/appmaptile?style=8&x=${x}&y=${y}&z=${z}`;
-
-// OpenStreetMap 瓦片（备用）
+// OpenStreetMap 瓦片
 const OSM_URL = (z: number, x: number, y: number) =>
   `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
 
@@ -53,12 +48,6 @@ async function fetchUpstream(url: string): Promise<{ data: ArrayBuffer; contentT
   try {
     const res = await fetch(url, {
       signal: AbortSignal.timeout(5000),
-      headers: {
-        // 模拟正常浏览器请求，避免被瓦片服务器拒绝
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Referer: "https://www.amap.com/",
-      },
     });
     if (!res.ok) return null;
     const contentType = res.headers.get("content-type") ?? "image/png";
@@ -155,11 +144,14 @@ export async function GET(
     return NextResponse.json({ error: "Invalid tile coordinates" }, { status: 400 });
   }
 
-  const source = new URL(request.url).searchParams.get("source") ?? "amap";
-  if (source !== "amap" && source !== "osm") {
+  const rawSource = new URL(request.url).searchParams.get("source") ?? "osm";
+  // 出于历史兼容性保留 amap 入参，但实际统一走 OSM。
+  if (rawSource !== "amap" && rawSource !== "osm") {
     return NextResponse.json({ error: "Invalid tile source" }, { status: 400 });
   }
-  const cacheKey = `${source}/${z}/${x}/${y}`;
+  // 归一化为 osm，保证缓存键一致、避免重复回源。
+  const effectiveSource = "osm";
+  const cacheKey = `${effectiveSource}/${z}/${x}/${y}`;
 
   // 命中缓存
   const cached = takeCache(cacheKey);
@@ -167,33 +159,10 @@ export async function GET(
     return responseFromTile(cached);
   }
 
-  // 1. 主源：高德（source=amap）或 OSM（source=osm）
-  let primaryUrl: string;
-  if (source === "osm") {
-    primaryUrl = OSM_URL(z, x, y);
-  } else {
-    const sub = AMAP_SUBDOMAINS[Math.floor(Math.random() * AMAP_SUBDOMAINS.length)];
-    primaryUrl = AMAP_URL(sub, z, x, y);
-  }
+  // 仅使用 OSM 瓦片源
+  const result = await fetchUpstream(OSM_URL(z, x, y));
 
-  let result = await fetchUpstream(primaryUrl);
-
-  // 2. 回退：高德失败时尝试 OSM（仅当主源是高德）
-  if (!result && source !== "osm") {
-    const fallbackKey = `osm/${z}/${x}/${y}`;
-    const fallbackCached = takeCache(fallbackKey);
-    if (fallbackCached) {
-      result = fallbackCached;
-    } else {
-      const fallbackResult = await fetchUpstream(OSM_URL(z, x, y));
-      if (fallbackResult) {
-        putCache(fallbackKey, fallbackResult);
-        result = fallbackResult;
-      }
-    }
-  }
-
-  // 3. 全部失败：返回透明 PNG，避免 Leaflet 反复重试
+  // 全部失败：返回透明 PNG，避免 Leaflet 反复重试
   if (!result) {
     return new NextResponse(TRANSPARENT_PNG, {
       headers: {

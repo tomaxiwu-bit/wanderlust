@@ -47,10 +47,10 @@ export default function MapView({ places, routesByDay }: MapViewProps) {
   const isDark = theme === "dark";
 
   // 主题感知的瓦片图层
-  // 通过本地代理 API（/api/tile）获取高德瓦片，绕过 Chromium ORB 限制
+  // 通过本地代理 API（/api/tile）获取 OpenStreetMap 瓦片，绕过 Chromium ORB 限制
   // 暗色模式通过 CSS filter 实现深色效果
-  const tileUrl = "/api/tile/{z}/{x}/{y}?source=amap";
-  const tileAttribution = '&copy; <a href="https://www.amap.com/">高德地图</a>';
+  const tileUrl = "/api/tile/{z}/{x}/{y}?source=osm";
+  const tileAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> 贡献者';
   const tileClassName = isDark ? "leaflet-tile-dark-filter" : "";
 
   // 筛选有坐标的地点
