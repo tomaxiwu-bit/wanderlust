@@ -2,6 +2,17 @@
 
 一个本地优先的旅行规划工具，帮你编排行程、管理预算、记录攻略。支持国内外旅行，地图路线、多币种预算、攻略笔记一应俱全。
 
+[![CI](https://github.com/tomaxiwu-bit/wanderlust/actions/workflows/ci.yml/badge.svg)](https://github.com/tomaxiwu-bit/wanderlust/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tomaxiwu-bit/wanderlust)](https://github.com/tomaxiwu-bit/wanderlust/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+## 为什么值得看
+
+- **本地优先**：无需账号即可完成行程、预算、笔记和打包流程；Supabase 只作为可选同步层。
+- **真实地理数据链路**：Nominatim 搜索、OSRM 路线、地图瓦片与公共交通均通过经过校验的服务端代理访问。
+- **可解释的规则引擎**：行程与打包建议由确定性的规则、模板和约束生成，不把启发式逻辑包装成大模型能力。
+- **工程化交付**：CI 会执行依赖审计、lint、类型检查、单元测试和生产构建。
+
 ## 技术栈
 
 | 技术 | 用途 |
@@ -58,7 +69,7 @@ Store 采用 **slice 模式**，每个领域独立维护 CRUD 逻辑：
 | `place-slice` | 地点 CRUD + 拖拽排序 | `addPlace`, `movePlace`, `removePlace` |
 | `expense-slice` | 支出记录 + 分类统计 | `addExpense`, `settleDebts`, `getCategoryTotals` |
 | `note-slice` | 攻略笔记 | `addNote`, `updateNote`, `removeNote` |
-| `packing-slice` | 打包清单 + AI 建议 | `toggleItem`, `suggestItems` |
+| `packing-slice` | 打包清单 + 基于规则的建议 | `toggleItem`, `suggestItems` |
 
 根 store 通过 Zustand `persist` 中间件自动保存到 `localStorage`，页面刷新不丢失。
 
@@ -66,7 +77,7 @@ Store 采用 **slice 模式**，每个领域独立维护 CRUD 逻辑：
 
 | 工具 | 最低版本 | 检查命令 |
 |------|---------|---------|
-| Node.js | 18.18.0+ | `node --version` |
+| Node.js | 20.9.0+ | `node --version` |
 | npm | 9.0+ | `npm --version` |
 
 支持操作系统：Windows 10/11、macOS 12+、Ubuntu 20.04+。
@@ -173,7 +184,7 @@ supabase/
 | 地图视图 | `/trip/[id]/map` | Leaflet 地图、标记、OSRM 真实路线 |
 | 预算管理 | `/trip/[id]/budget` | 支出 CRUD、分类图表、多币种换算、债务分摊 |
 | 攻略笔记 | `/trip/[id]/notes` | Tiptap 富文本编辑器 |
-| 打包清单 | `/trip/[id]/packing` | 清单 CRUD、AI 建议、分类筛选 |
+| 打包清单 | `/trip/[id]/packing` | 清单 CRUD、基于规则的建议、分类筛选 |
 | 用户主页 | `/profile` | 资料编辑、行程统计、云端同步 |
 | 探索广场 | `/explore` | 社区模板搜索、fork |
 | 登录/注册 | `/auth/login`, `/auth/register` | Supabase 邮箱认证 |
@@ -324,6 +335,17 @@ npm start
 ```
 
 推荐部署到 [Vercel](https://vercel.com)，自动 CI/CD，免费托管。
+
+## 验证
+
+```bash
+npm ci
+npm run check
+npm run build
+npm audit --omit=dev --audit-level=high
+```
+
+测试重点覆盖领域状态、导入导出、静态分享、债务结算、API 输入边界，以及规则化行程和打包建议。
 
 ### 运行时保护
 

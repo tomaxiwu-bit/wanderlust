@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Keep Turbopack inside this repository. Without an explicit root, Next.js
+  // can select a parent lockfile on Windows and attempt to scan the user
+  // profile, producing access errors and non-reproducible builds.
+  turbopack: {
+    root: process.cwd(),
+  },
   // 项目路径包含中文字符（桌面/github项目），
   // Turbopack 生成 source map 时会报字节边界错误，
   // 因此 dev 脚本使用 --webpack 参数启动。
