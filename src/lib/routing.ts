@@ -12,54 +12,11 @@ import { estimateCommute } from "@/lib/haversine";
 
 const ROUTE_PROXY = "/api/route";
 
-/** 出行方式（目前仅 driving，OSRM 公共服务限制） */
-export type TravelMode = "driving";
-
 /** 路线信息 */
 export interface RouteInfo {
   distance: number; // 距离（米）
   duration: number; // 时长（秒）
   geometry: [number, number][]; // 路线坐标点 [lat, lng]
-}
-
-/**
- * 获取两点之间的路线（通过本地代理）
- * @param from 起点坐标 [lat, lng]
- * @param to 终点坐标 [lat, lng]
- * @param signal 可选的 AbortSignal，用于取消请求
- * @returns 路线信息，失败返回 null
- */
-export async function getRoute(
-  from: [number, number],
-  to: [number, number],
-  signal?: AbortSignal
-): Promise<RouteInfo | null> {
-  const coordsStr = `${from[0]},${from[1]};${to[0]},${to[1]}`;
-  const url = `${ROUTE_PROXY}?coords=${encodeURIComponent(coordsStr)}`;
-
-  try {
-    const fetchSignal = signal
-      ? AbortSignal.any([signal, AbortSignal.timeout(12000)])
-      : AbortSignal.timeout(12000);
-    const res = await fetch(url, { signal: fetchSignal });
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    if (!data.routes?.length) return null;
-
-    const route = data.routes[0];
-    return {
-      distance: route.distance,
-      duration: route.duration,
-      geometry: route.geometry || [],
-    };
-  } catch (err) {
-    // AbortError 是组件卸载时的正常取消，不需要警告
-    if (!(err instanceof DOMException && err.name === "AbortError")) {
-      console.warn("[Routing] 路线规划失败，使用估算兜底:", err);
-    }
-    return null;
-  }
 }
 
 /**

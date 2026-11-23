@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { formatDate, daysBetween } from "@/lib/utils";
 import { getTripStatusConfig } from "@/lib/constants";
-import { getStorageUsage, getStorageUsageAsync, formatBytes } from "@/lib/storage-monitor";
+import { getStorageUsage, formatBytes } from "@/lib/storage-monitor";
 import { TemplateRecommendModal } from "@/components/trip/TemplateRecommendModal";
 import type { TripStatus } from "@/types";
 
@@ -45,13 +45,12 @@ export default function DashboardPage() {
   const router = useRouter();
 
   // 存储用量监控（内联实现，避免独立组件文件的 SWC 编译问题）
-  // 初始用同步版本（保守 5MB 上限），挂载后用异步版本获取真实配额
+  // 初始用保守的 5MB 上限，挂载后刷新实际用量
   const [storageUsage, setStorageUsage] = useState(() => getStorageUsage());
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
-    // 异步刷新：使用 navigator.storage.estimate() 获取真实配额
-    const updateUsage = async () => setStorageUsage(await getStorageUsageAsync());
+    const updateUsage = () => setStorageUsage(getStorageUsage());
     updateUsage();
     window.addEventListener("focus", updateUsage);
     return () => window.removeEventListener("focus", updateUsage);

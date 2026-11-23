@@ -59,13 +59,6 @@ export interface Place {
   cloudId?: string;
 }
 
-/** 一天的行程 */
-export interface ItineraryDay {
-  dayIndex: number;
-  date: string;
-  places: Place[];
-}
-
 // ==================== 预算管理相关类型 ====================
 
 /** 支出分类 */
@@ -94,15 +87,6 @@ export interface Expense {
   splitAmong?: string[];
   /** 云端记录 ID */
   cloudId?: string;
-}
-
-/** 预算统计 */
-export interface BudgetStats {
-  totalSpent: number;
-  byCategory: Record<ExpenseCategory, number>;
-  byDay: { dayIndex: number; amount: number }[];
-  remainingBudget?: number;
-  overBudget: boolean;
 }
 
 // ==================== 攻略笔记相关类型 ====================
@@ -156,41 +140,4 @@ export interface Profile {
   avatarUrl?: string;
   bio?: string;
   createdAt: string;
-}
-
-/** 行程模板（社区分享） */
-export interface TripTemplate {
-  id: string;
-  userId: string;
-  tripId: string;
-  title: string;
-  description: string;
-  destination: string;
-  days: number;
-  coverImage?: string;
-  tags: string[];
-  forkCount: number;
-  likeCount: number;
-  createdAt: string;
-}
-
-// ==================== 地图相关类型 ====================
-
-/** 地图标记 */
-export interface MapMarker {
-  id: string;
-  placeId: string;
-  name: string;
-  lat: number;
-  lng: number;
-  type: PlaceType;
-  dayIndex: number;
-}
-
-/** 路线段 */
-export interface RouteSegment {
-  from: MapMarker;
-  to: MapMarker;
-  distance?: number; // 米
-  duration?: number; // 分钟
 }
