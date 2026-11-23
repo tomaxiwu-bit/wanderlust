@@ -7,6 +7,10 @@
 **[快速试用](#快速试用)** · [走通一个行程](#走通一个行程) · [开发与配置](docs/DEVELOPMENT.md) · [版本记录](docs/RELEASE_NOTES_v0.1.0.md)
 
 [![CI](https://github.com/tomaxiwu-bit/wanderlust/actions/workflows/ci.yml/badge.svg)](https://github.com/tomaxiwu-bit/wanderlust/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tomaxiwu-bit/wanderlust)](https://github.com/tomaxiwu-bit/wanderlust/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)](package.json)
+[![Node](https://img.shields.io/badge/node-%3E%3D20.9-339933?logo=node.js&logoColor=white)](package.json)
 
 ![Wanderlust 旅行规划器首页](docs/images/home.png)
 
